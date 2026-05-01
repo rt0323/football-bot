@@ -1,0 +1,8 @@
+{
+  "teams": {
+    "Tigers": {"pts": 0, "played": 0, "wins": 0},
+    "Wolves": {"pts": 0, "played": 0, "wins": 0}
+  },
+  "schedule": [],
+  "matches": []
+}
