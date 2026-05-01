@@ -73,7 +73,7 @@ async def admin(message: Message):
                 KeyboardButton(
                     text="🌐 Админка",
                     web_app=WebAppInfo(
-                        url="https://football-bot-production-461b.up.railway.app"
+                        url="football-bot-production-bd55.up.railway.app"
                     )
                 )
             ]
