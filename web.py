@@ -1,36 +1,47 @@
-from flask import Flask, request, redirect
-import json
+from flask import Flask
 import os
+import json
 
 app = Flask(__name__)
 
 DATA_FILE = "data.json"
 
 
+# -------------------------
+# SAFE LOAD (НЕ ПАДАЕТ НИКОГДА)
+# -------------------------
+
 def load():
+    if not os.path.exists(DATA_FILE):
+        return {"status": "ok"}
+
     try:
         with open(DATA_FILE, "r", encoding="utf-8") as f:
             return json.load(f)
     except:
-        return {"teams": {}, "players": {}, "matches": [], "schedule": []}
-
-
-def save(data):
-    with open(DATA_FILE, "w", encoding="utf-8") as f:
-        json.dump(data, f, ensure_ascii=False, indent=2)
+        return {"status": "broken json"}
 
 
 # -------------------------
-# HOME
+# HOME PAGE
 # -------------------------
 
 @app.route("/")
-def index():
-    return "⚽ Football Admin is running"
+def home():
+    return "⚽ Football bot admin is running"
 
 
 # -------------------------
-# RUN (ВАЖНО ДЛЯ RAILWAY)
+# HEALTH CHECK (ВАЖНО ДЛЯ RAILWAY)
+# -------------------------
+
+@app.route("/health")
+def health():
+    return {"ok": True}
+
+
+# -------------------------
+# START SERVER (CRITICAL)
 # -------------------------
 
 if __name__ == "__main__":
