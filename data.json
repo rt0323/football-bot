@@ -1,5 +1,9 @@
 {
   "teams": {},
   "schedule": [],
-  "matches": []
+  "matches": [],
+  "players": {},
+  "playoff": {
+    "rounds": []
+  }
 }
