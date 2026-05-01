@@ -40,8 +40,11 @@ menu = ReplyKeyboardMarkup(
 @dp.message(Command("admin"))
 async def admin(message: Message):
 
+    print("ADMIN COMMAND:", message.from_user.id)  # проверка
+
     if message.from_user.id != ADMIN_ID:
-        return await message.answer("⛔ Нет доступа")
+        await message.answer("⛔ Нет доступа")
+        return
 
     kb = ReplyKeyboardMarkup(
         keyboard=[
@@ -57,8 +60,7 @@ async def admin(message: Message):
         resize_keyboard=True
     )
 
-    await message.answer("👑 Панель управления", reply_markup=kb)
-
+    await message.answer("👑 Админ панель", reply_markup=kb)
 
 # -------------------------
 # START
