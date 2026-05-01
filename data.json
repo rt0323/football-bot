@@ -1,9 +1,11 @@
 {
   "teams": {},
-  "schedule": [],
-  "matches": [],
   "players": {},
+  "matches": [],
+  "schedule": [],
+  "rules": "Футбольный мини-турнир. Победа = 3 очка, ничья = 1.",
   "playoff": {
-    "rounds": []
+    "enabled": false,
+    "bracket": []
   }
 }
