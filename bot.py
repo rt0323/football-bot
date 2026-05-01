@@ -7,13 +7,15 @@ from aiogram.types import Message, ReplyKeyboardMarkup, KeyboardButton
 
 TOKEN = os.getenv("TOKEN")
 
+ADMIN_ID = 883609508  # твой Telegram ID
+
 bot = Bot(token=TOKEN)
 dp = Dispatcher()
 
 DATA_FILE = "data.json"
 
 # -------------------------
-# 📂 работа с данными
+# 📂 работа с JSON
 # -------------------------
 
 def load_data():
@@ -26,6 +28,13 @@ def load_data():
 def save_data(data):
     with open(DATA_FILE, "w", encoding="utf-8") as f:
         json.dump(data, f, ensure_ascii=False, indent=2)
+
+# -------------------------
+# 👑 проверка админа
+# -------------------------
+
+def is_admin(user_id):
+    return user_id == ADMIN_ID
 
 # -------------------------
 # 🔘 меню
@@ -41,12 +50,12 @@ menu = ReplyKeyboardMarkup(
 )
 
 # -------------------------
-# старт
+# 🚀 старт
 # -------------------------
 
 @dp.message(Command("start"))
 async def start(message: Message):
-    await message.answer("🏆 Добро пожаловать в футбольную лигу!", reply_markup=menu)
+    await message.answer("🏆 Футбольная лига запущена!", reply_markup=menu)
 
 # -------------------------
 # 📅 расписание
@@ -85,7 +94,7 @@ async def matches(message: Message):
     await message.answer(text)
 
 # -------------------------
-# 🏆 таблица (авто подсчёт)
+# 🏆 таблица
 # -------------------------
 
 @dp.message(F.text == "🏆 Таблица")
@@ -94,14 +103,13 @@ async def table(message: Message):
 
     teams = data["teams"]
 
-    # если нет команд
     if not teams:
         await message.answer("Нет команд")
         return
 
-    sorted_teams = sorted(teams.items(), key=lambda x: x[1].get("pts", 0), reverse=True)
+    sorted_teams = sorted(teams.items(), key=lambda x: x[1]["pts"], reverse=True)
 
-    text = "🏆 ТАБЛИЦА ЛИГИ:\n\n"
+    text = "🏆 ТАБЛИЦА:\n\n"
 
     for name, t in sorted_teams:
         text += (
@@ -112,6 +120,104 @@ async def table(message: Message):
         )
 
     await message.answer(text)
+
+# -------------------------
+# 👑 АДМИН: добавить матч
+# -------------------------
+
+@dp.message(Command("add_match"))
+async def add_match(message: Message):
+    if not is_admin(message.from_user.id):
+        return await message.answer("⛔ Нет доступа")
+
+    try:
+        parts = message.text.split()
+        home = parts[1]
+        away = parts[2]
+        score = parts[3]
+
+        data = load_data()
+
+        data["matches"].append({
+            "home": home,
+            "away": away,
+            "score": score
+        })
+
+        save_data(data)
+
+        await message.answer("✅ Матч добавлен")
+
+    except:
+        await message.answer("❌ /add_match TeamA TeamB 2:1")
+
+# -------------------------
+# 👑 АДМИН: расписание
+# -------------------------
+
+@dp.message(Command("add_schedule"))
+async def add_schedule(message: Message):
+    if not is_admin(message.from_user.id):
+        return await message.answer("⛔ Нет доступа")
+
+    text = message.text.replace("/add_schedule ", "")
+
+    data = load_data()
+    data["schedule"].append(text)
+    save_data(data)
+
+    await message.answer("✅ Добавлено в расписание")
+
+# -------------------------
+# 👑 АДМИН: команды
+# -------------------------
+
+@dp.message(Command("add_team"))
+async def add_team(message: Message):
+    if not is_admin(message.from_user.id):
+        return await message.answer("⛔ Нет доступа")
+
+    try:
+        team = message.text.split()[1]
+
+        data = load_data()
+
+        if team not in data["teams"]:
+            data["teams"][team] = {"pts": 0, "played": 0, "wins": 0}
+            save_data(data)
+
+        await message.answer(f"✅ Команда {team} добавлена")
+
+    except:
+        await message.answer("❌ /add_team TeamName")
+
+# -------------------------
+# 👑 АДМИН: очки
+# -------------------------
+
+@dp.message(Command("set_points"))
+async def set_points(message: Message):
+    if not is_admin(message.from_user.id):
+        return await message.answer("⛔ Нет доступа")
+
+    try:
+        parts = message.text.split()
+        team = parts[1]
+        points = int(parts[2])
+
+        data = load_data()
+
+        if team not in data["teams"]:
+            data["teams"][team] = {"pts": 0, "played": 0, "wins": 0}
+
+        data["teams"][team]["pts"] = points
+
+        save_data(data)
+
+        await message.answer("✅ Очки обновлены")
+
+    except:
+        await message.answer("❌ /set_points Team 10")
 
 # -------------------------
 # 🚀 запуск
