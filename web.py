@@ -5,173 +5,91 @@ app = Flask(__name__)
 
 DATA_FILE = "data.json"
 
-# -------------------------
-# 📂 DATA
-# -------------------------
 
 def load():
-    try:
-        with open(DATA_FILE, "r", encoding="utf-8") as f:
-            return json.load(f)
-    except:
-        return {"teams": {}, "matches": [], "schedule": []}
+    with open(DATA_FILE, "r", encoding="utf-8") as f:
+        return json.load(f)
+
 
 def save(data):
     with open(DATA_FILE, "w", encoding="utf-8") as f:
         json.dump(data, f, ensure_ascii=False, indent=2)
 
+
 # -------------------------
-# 🎨 UI
+# 🏠 UI
 # -------------------------
 
-def layout(content):
-    return f"""
+@app.route("/")
+def index():
+    return """
 <!DOCTYPE html>
 <html>
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-
-<title>Футбольная админка</title>
+<title>Турнир</title>
 
 <style>
-body {{
-    margin: 0;
-    font-family: Arial;
-    background: #0f172a;
-    color: white;
-}}
-
-.sidebar {{
-    width: 220px;
-    height: 100vh;
-    position: fixed;
-    background: #111827;
-    padding: 20px;
-}}
-
-.sidebar h2 {{
-    color: #22c55e;
-}}
-
-.sidebar a {{
-    display: block;
-    color: white;
-    text-decoration: none;
-    padding: 10px;
-    margin-top: 10px;
-    border-radius: 8px;
-}}
-
-.sidebar a:hover {{
-    background: #1f2937;
-}}
-
-.main {{
-    margin-left: 240px;
-    padding: 20px;
-}}
-
-.card {{
-    background: #1f2937;
-    padding: 15px;
-    border-radius: 12px;
-    margin-bottom: 15px;
-}}
-
-input {{
-    padding: 10px;
-    margin: 5px;
-    border-radius: 8px;
-    border: none;
-}}
-
-button {{
-    padding: 10px;
-    background: #22c55e;
-    border: none;
-    border-radius: 8px;
-    cursor: pointer;
-}}
-
-table {{
-    width: 100%;
-    margin-top: 20px;
-    background: #111827;
-    border-radius: 10px;
-}}
-
-td, th {{
-    padding: 10px;
-}}
+body {background:#0f172a;color:white;font-family:Arial;text-align:center;}
+.box {background:#1f2937;margin:10px;padding:15px;border-radius:10px;}
+input,button{padding:10px;margin:5px;border-radius:8px;border:none;}
+button{background:#22c55e;}
 </style>
-
 </head>
 
 <body>
 
-<div class="sidebar">
-<h2>⚽ Турнир</h2>
-<a href="/">🏠 Главная</a>
+<h2>⚽ Админка турнира</h2>
+
+<div class="box">
+<h3>➕ Команда</h3>
+<form action="/add_team" method="post">
+<input name="team">
+<button>Добавить</button>
+</form>
 </div>
 
-<div class="main">
-{content}
+<div class="box">
+<h3>👤 Игрок</h3>
+<form action="/add_player" method="post">
+<input name="team">
+<input name="player">
+<button>Добавить</button>
+</form>
+</div>
+
+<div class="box">
+<h3>📅 Расписание</h3>
+<form action="/add_schedule" method="post">
+<input name="home">
+<input name="away">
+<input name="time">
+<button>Добавить</button>
+</form>
+</div>
+
+<div class="box">
+<h3>⚽ Матч</h3>
+<form action="/add_match" method="post">
+<input name="home">
+<input name="away">
+<input name="score">
+<button>Добавить</button>
+</form>
+</div>
+
+<div class="box">
+<h3>🏆 Плей-офф</h3>
+<form action="/generate_playoff" method="post">
+<button>Создать плей-офф</button>
+</form>
 </div>
 
 </body>
 </html>
 """
 
-# -------------------------
-# 🏠 DASHBOARD
-# -------------------------
-
-@app.route("/")
-def index():
-    data = load()
-
-    teams = sorted(data["teams"].items(), key=lambda x: x[1]["pts"], reverse=True)
-
-    content = """
-    <h1>📊 Панель управления турниром</h1>
-
-    <div class="card">
-    <h3>➕ Добавить команду</h3>
-    <form action="/add_team" method="post">
-        <input name="team" placeholder="Название команды">
-        <button>Добавить</button>
-    </form>
-    </div>
-
-    <div class="card">
-    <h3>⚽ Добавить матч</h3>
-    <form action="/add_match" method="post">
-        <input name="home" placeholder="Домашняя">
-        <input name="away" placeholder="Гостевая">
-        <input name="score" placeholder="2:1">
-        <button>Добавить</button>
-    </form>
-    </div>
-
-    <h2>🏆 Таблица</h2>
-    <table>
-    <tr><th>Команда</th><th>Очки</th><th>Победы</th><th>Игры</th></tr>
-    """
-
-    for name, t in teams:
-        content += f"""
-        <tr>
-            <td>{name}</td>
-            <td>{t['pts']}</td>
-            <td>{t['wins']}</td>
-            <td>{t['played']}</td>
-        </tr>
-        """
-
-    content += "</table>"
-
-    return layout(content)
 
 # -------------------------
 # ➕ TEAM
@@ -187,6 +105,43 @@ def add_team():
 
     save(data)
     return redirect("/")
+
+
+# -------------------------
+# 👤 PLAYER
+# -------------------------
+
+@app.route("/add_player", methods=["POST"])
+def add_player():
+    data = load()
+    team = request.form["team"]
+    player = request.form["player"]
+
+    if team not in data["players"]:
+        data["players"][team] = []
+
+    data["players"][team].append(player)
+    save(data)
+    return redirect("/")
+
+
+# -------------------------
+# 📅 SCHEDULE
+# -------------------------
+
+@app.route("/add_schedule", methods=["POST"])
+def add_schedule():
+    data = load()
+
+    data["schedule"].append({
+        "home": request.form["home"],
+        "away": request.form["away"],
+        "time": request.form["time"]
+    })
+
+    save(data)
+    return redirect("/")
+
 
 # -------------------------
 # ⚽ MATCH
@@ -228,8 +183,31 @@ def add_match():
     save(data)
     return redirect("/")
 
+
 # -------------------------
-# 🚀 RUN
+# 🏆 PLAYOFF
+# -------------------------
+
+@app.route("/generate_playoff", methods=["POST"])
+def generate_playoff():
+    data = load()
+
+    teams = sorted(data["teams"].items(), key=lambda x: x[1]["pts"], reverse=True)
+    top4 = [t[0] for t in teams[:4]]
+
+    data["playoff"]["bracket"] = [
+        {"home": top4[0], "away": top4[3], "score": None},
+        {"home": top4[1], "away": top4[2], "score": None}
+    ]
+
+    data["playoff"]["enabled"] = True
+
+    save(data)
+    return redirect("/")
+
+
+# -------------------------
+# RUN
 # -------------------------
 
 if __name__ == "__main__":
