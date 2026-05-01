@@ -8,7 +8,7 @@ from aiogram.types import Message, ReplyKeyboardMarkup, KeyboardButton, WebAppIn
 
 
 # -------------------------
-# 🔑 TOKEN
+# 🔑 TOKEN (Railway Variables)
 # -------------------------
 TOKEN = os.getenv("TOKEN")
 
@@ -19,7 +19,7 @@ DATA_FILE = "data.json"
 
 
 # -------------------------
-# 📂 LOAD DATA
+# 📂 SAFE LOAD DATA
 # -------------------------
 def load():
     if not os.path.exists(DATA_FILE):
@@ -30,8 +30,16 @@ def load():
             "rules": "3 очка победа / 1 ничья / 0 поражение"
         }
 
-    with open(DATA_FILE, "r", encoding="utf-8") as f:
-        return json.load(f)
+    try:
+        with open(DATA_FILE, "r", encoding="utf-8") as f:
+            return json.load(f)
+    except:
+        return {
+            "teams": {},
+            "matches": [],
+            "schedule": [],
+            "rules": "error json"
+        }
 
 
 # -------------------------
@@ -56,7 +64,7 @@ async def start(message: Message):
 
 
 # -------------------------
-# 👑 ADMIN WEBAPP
+# 👑 ADMIN PANEL (WEBAPP FIXED HTTPS)
 # -------------------------
 ADMIN_ID = 883609508
 
@@ -73,7 +81,7 @@ async def admin(message: Message):
                 KeyboardButton(
                     text="🌐 Админка",
                     web_app=WebAppInfo(
-                        url="football-bot-production-bd55.up.railway.app"
+                        url="https://football-bot-production-bd55.up.railway.app"
                     )
                 )
             ]
@@ -94,7 +102,7 @@ async def schedule(message: Message):
     text = "📅 Расписание:\n\n"
 
     for s in data.get("schedule", []):
-        text += f"{s}\n"
+        text += f"⚽ {s}\n"
 
     await message.answer(text or "Нет матчей")
 
@@ -115,7 +123,7 @@ async def matches(message: Message):
 
 
 # -------------------------
-# 🏆 TABLE (простая версия)
+# 🏆 TABLE
 # -------------------------
 @dp.message(F.text == "🏆 Таблица")
 async def table(message: Message):
@@ -132,17 +140,17 @@ async def table(message: Message):
 
 
 # -------------------------
-# 🔥 MAIN FIX (УБИРАЕТ CONFLICT)
+# 🔥 FIX TELEGRAM CONFLICT + START
 # -------------------------
 async def main():
-    # 🔥 ВАЖНО: убирает старые getUpdates сессии
+    # убирает старые polling-сессии
     await bot.delete_webhook(drop_pending_updates=True)
 
     await dp.start_polling(bot)
 
 
 # -------------------------
-# ▶️ START
+# ▶️ RUN
 # -------------------------
 if __name__ == "__main__":
     asyncio.run(main())
