@@ -3,13 +3,14 @@ import os
 import json
 from aiogram import Bot, Dispatcher, F
 from aiogram.filters import Command
-from aiogram.types import Message, ReplyKeyboardMarkup, KeyboardButton
+from aiogram.types import Message, ReplyKeyboardMarkup, KeyboardButton, InlineKeyboardMarkup, InlineKeyboardButton
 
 TOKEN = os.getenv("TOKEN")
 bot = Bot(token=TOKEN)
 dp = Dispatcher()
 DATA_FILE = "data.json"
 ADMIN_ID = 883609508
+SITE_URL = "https://football-bot-production-bd55.up.railway.app"
 
 # -------------------------
 # 📂 DATA
@@ -200,14 +201,23 @@ async def admin_info(message: Message):
     if message.from_user.id != ADMIN_ID:
         await message.answer("⛔ Нет доступа")
         return
+
+    kb = InlineKeyboardMarkup(inline_keyboard=[
+        [InlineKeyboardButton(
+            text="🌐 Открыть админ-панель",
+            url=f"{SITE_URL}/admin"
+        )]
+    ])
+
     await message.answer(
-        "👑 <b>Управление через веб-админку</b>\n\n"
-        "Открой админ-панель на сайте турнира для управления.\n\n"
-        "Или используй команды:\n"
-        "/live Команда1|2:1|Команда2|Голы — начать live\n"
+        "👑 <b>Панель администратора</b>\n\n"
+        "Нажми кнопку ниже чтобы открыть веб-админку.\n\n"
+        "Или используй команды прямо в боте:\n\n"
+        "/live Команда1|2:1|Команда2|Кто забил\n"
         "/stoplive — завершить матч\n"
-        "/notify Текст — отправить уведомление всем\n"
-        "/startmatch Команда1|Команда2 — уведомить о начале",
+        "/startmatch Команда1|Команда2\n"
+        "/notify Текст уведомления",
+        reply_markup=kb,
         parse_mode="HTML"
     )
 
