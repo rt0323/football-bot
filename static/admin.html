@@ -1,0 +1,689 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>⚽ Админ-панель турнира</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0a0e1a;
+    --card: #111827;
+    --border: #1f2937;
+    --accent: #22c55e;
+    --accent2: #16a34a;
+    --red: #ef4444;
+    --yellow: #eab308;
+    --text: #f9fafb;
+    --muted: #6b7280;
+    --input-bg: #1f2937;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { background: var(--bg); color: var(--text); font-family: 'Inter', sans-serif; min-height: 100vh; }
+
+  /* HEADER */
+  header {
+    background: linear-gradient(135deg, #064e3b, #065f46, #0a0e1a);
+    border-bottom: 2px solid var(--accent);
+    padding: 20px 24px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+  header h1 { font-family: 'Bebas Neue', sans-serif; font-size: 28px; letter-spacing: 2px; color: var(--accent); }
+  header span { font-size: 13px; color: var(--muted); }
+
+  /* AUTH */
+  #auth-screen {
+    display: flex; align-items: center; justify-content: center;
+    min-height: 100vh;
+    background: radial-gradient(ellipse at center, #064e3b22 0%, var(--bg) 70%);
+  }
+  .auth-box {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 40px;
+    width: 360px;
+    text-align: center;
+  }
+  .auth-box h2 { font-family: 'Bebas Neue', sans-serif; font-size: 32px; color: var(--accent); margin-bottom: 8px; }
+  .auth-box p { color: var(--muted); margin-bottom: 24px; font-size: 14px; }
+
+  /* LAYOUT */
+  .container { max-width: 1100px; margin: 0 auto; padding: 24px; }
+  .tabs { display: flex; gap: 4px; margin-bottom: 24px; background: var(--card); padding: 6px; border-radius: 12px; border: 1px solid var(--border); flex-wrap: wrap; }
+  .tab {
+    padding: 10px 18px; border-radius: 8px; cursor: pointer;
+    font-size: 14px; font-weight: 500; color: var(--muted);
+    transition: all 0.2s; border: none; background: none;
+  }
+  .tab.active { background: var(--accent); color: #000; font-weight: 600; }
+  .tab:hover:not(.active) { color: var(--text); background: var(--border); }
+
+  .panel { display: none; }
+  .panel.active { display: block; }
+
+  /* CARDS */
+  .card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 20px;
+    margin-bottom: 16px;
+  }
+  .card h3 { font-size: 14px; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 16px; }
+
+  /* FORM ELEMENTS */
+  input, select, textarea {
+    width: 100%; padding: 10px 14px;
+    background: var(--input-bg);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    color: var(--text);
+    font-size: 14px;
+    font-family: 'Inter', sans-serif;
+    outline: none;
+    transition: border-color 0.2s;
+  }
+  input:focus, select:focus, textarea:focus { border-color: var(--accent); }
+  textarea { min-height: 100px; resize: vertical; }
+  select option { background: var(--card); }
+
+  .form-row { display: grid; gap: 10px; margin-bottom: 10px; }
+  .form-row.cols-2 { grid-template-columns: 1fr 1fr; }
+  .form-row.cols-3 { grid-template-columns: 1fr 1fr 1fr; }
+
+  /* BUTTONS */
+  .btn {
+    padding: 10px 20px; border-radius: 8px; border: none;
+    cursor: pointer; font-size: 14px; font-weight: 600;
+    font-family: 'Inter', sans-serif;
+    transition: all 0.15s; display: inline-flex; align-items: center; gap: 6px;
+  }
+  .btn-green { background: var(--accent); color: #000; }
+  .btn-green:hover { background: var(--accent2); }
+  .btn-red { background: var(--red); color: #fff; }
+  .btn-red:hover { background: #dc2626; }
+  .btn-yellow { background: var(--yellow); color: #000; }
+  .btn-yellow:hover { background: #ca8a04; }
+  .btn-gray { background: var(--border); color: var(--text); }
+  .btn-gray:hover { background: #374151; }
+  .btn-sm { padding: 6px 12px; font-size: 12px; }
+  .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+  /* LIVE WIDGET */
+  .live-widget {
+    background: linear-gradient(135deg, #1a0a0a, #2d0a0a);
+    border: 2px solid var(--red);
+    border-radius: 12px;
+    padding: 20px;
+    margin-bottom: 16px;
+  }
+  .live-badge {
+    display: inline-flex; align-items: center; gap: 6px;
+    background: var(--red); color: #fff; font-size: 11px; font-weight: 700;
+    padding: 3px 10px; border-radius: 99px; margin-bottom: 12px;
+    text-transform: uppercase; letter-spacing: 1px;
+  }
+  .live-badge::before { content: ''; width: 6px; height: 6px; background: #fff; border-radius: 50%; animation: pulse 1s infinite; }
+  @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.3; } }
+  .live-score { font-family: 'Bebas Neue', sans-serif; font-size: 42px; text-align: center; color: var(--text); letter-spacing: 4px; }
+  .live-teams { display: flex; justify-content: space-between; font-size: 13px; color: var(--muted); margin-top: 4px; }
+
+  /* LISTS */
+  .list-item {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 10px 14px; background: var(--input-bg);
+    border-radius: 8px; margin-bottom: 8px;
+    border: 1px solid var(--border);
+  }
+  .list-item:last-child { margin-bottom: 0; }
+  .list-item-info { font-size: 14px; }
+  .list-item-sub { font-size: 12px; color: var(--muted); margin-top: 2px; }
+  .list-actions { display: flex; gap: 6px; }
+
+  /* PLAYOFF BRACKET */
+  .bracket { display: flex; gap: 20px; overflow-x: auto; padding-bottom: 10px; }
+  .bracket-round { min-width: 180px; }
+  .bracket-round h4 { font-size: 11px; color: var(--accent); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 12px; font-weight: 700; }
+  .bracket-match {
+    background: var(--input-bg); border: 1px solid var(--border);
+    border-radius: 8px; margin-bottom: 8px; overflow: hidden;
+  }
+  .bracket-team {
+    padding: 8px 12px; font-size: 13px;
+    border-bottom: 1px solid var(--border);
+    display: flex; justify-content: space-between;
+  }
+  .bracket-team:last-child { border-bottom: none; }
+  .bracket-team.winner { color: var(--accent); font-weight: 600; }
+
+  /* TOAST */
+  #toast {
+    position: fixed; bottom: 24px; right: 24px;
+    padding: 12px 20px; border-radius: 10px;
+    font-size: 14px; font-weight: 500;
+    transform: translateY(100px); opacity: 0;
+    transition: all 0.3s; z-index: 999;
+  }
+  #toast.show { transform: translateY(0); opacity: 1; }
+  #toast.success { background: var(--accent); color: #000; }
+  #toast.error { background: var(--red); color: #fff; }
+
+  /* STATS ROW */
+  .stats-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 20px; }
+  .stat-card { background: var(--card); border: 1px solid var(--border); border-radius: 10px; padding: 16px; text-align: center; }
+  .stat-num { font-family: 'Bebas Neue', sans-serif; font-size: 32px; color: var(--accent); }
+  .stat-label { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: 1px; }
+
+  @media (max-width: 600px) {
+    .form-row.cols-2, .form-row.cols-3 { grid-template-columns: 1fr; }
+    .stats-row { grid-template-columns: repeat(2, 1fr); }
+    header h1 { font-size: 22px; }
+  }
+</style>
+</head>
+<body>
+
+<!-- AUTH -->
+<div id="auth-screen">
+  <div class="auth-box">
+    <div style="font-size:48px;margin-bottom:12px">⚽</div>
+    <h2>Админ-панель</h2>
+    <p>Введи секретный пароль для доступа</p>
+    <div style="margin-bottom:12px">
+      <input type="password" id="secret-input" placeholder="Пароль..." onkeydown="if(event.key==='Enter')login()">
+    </div>
+    <button class="btn btn-green" style="width:100%" onclick="login()">Войти</button>
+    <div id="auth-error" style="color:var(--red);font-size:13px;margin-top:10px;display:none">Неверный пароль</div>
+  </div>
+</div>
+
+<!-- MAIN APP -->
+<div id="app" style="display:none">
+  <header>
+    <h1>⚽ Турнир</h1>
+    <span id="sub-count">Подписчиков: —</span>
+  </header>
+
+  <div class="container">
+    <!-- STATS -->
+    <div class="stats-row">
+      <div class="stat-card"><div class="stat-num" id="stat-teams">0</div><div class="stat-label">Команды</div></div>
+      <div class="stat-card"><div class="stat-num" id="stat-matches">0</div><div class="stat-label">Матчи</div></div>
+      <div class="stat-card"><div class="stat-num" id="stat-schedule">0</div><div class="stat-label">Расписание</div></div>
+      <div class="stat-card"><div class="stat-num" id="stat-subs">0</div><div class="stat-label">Подписчики</div></div>
+    </div>
+
+    <!-- TABS -->
+    <div class="tabs">
+      <button class="tab active" onclick="switchTab('live')">🔴 Live счёт</button>
+      <button class="tab" onclick="switchTab('teams')">⚽ Команды</button>
+      <button class="tab" onclick="switchTab('schedule')">📅 Расписание</button>
+      <button class="tab" onclick="switchTab('playoff')">🥊 Плей-офф</button>
+      <button class="tab" onclick="switchTab('rules')">📋 Правила</button>
+      <button class="tab" onclick="switchTab('notify')">📣 Уведомления</button>
+    </div>
+
+    <!-- LIVE TAB -->
+    <div class="panel active" id="panel-live">
+      <div id="live-display" style="display:none">
+        <div class="live-widget">
+          <div class="live-badge">Live</div>
+          <div class="live-score" id="live-score-display">0 : 0</div>
+          <div class="live-teams">
+            <span id="live-home-display">—</span>
+            <span id="live-away-display">—</span>
+          </div>
+          <div style="margin-top:10px;font-size:13px;color:var(--muted)" id="live-scorers-display"></div>
+          <div style="display:flex;gap:10px;margin-top:16px">
+            <button class="btn btn-yellow" style="flex:1" onclick="showUpdateScore()">✏️ Обновить счёт</button>
+            <button class="btn btn-red" onclick="stopLive()">🏁 Завершить матч</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="card" id="start-match-card">
+        <h3>🚀 Начать матч</h3>
+        <div class="form-row cols-2">
+          <select id="live-home-select"><option value="">Команда 1...</option></select>
+          <select id="live-away-select"><option value="">Команда 2...</option></select>
+        </div>
+        <button class="btn btn-green" onclick="startMatch()">⚽ Начать матч + уведомить</button>
+      </div>
+
+      <div class="card" id="update-score-card" style="display:none">
+        <h3>✏️ Обновить счёт</h3>
+        <div class="form-row cols-3">
+          <input type="number" id="score-home" placeholder="Голы хозяев" min="0" value="0">
+          <div style="display:flex;align-items:center;justify-content:center;font-family:'Bebas Neue';font-size:24px;color:var(--accent)">:</div>
+          <input type="number" id="score-away" placeholder="Голы гостей" min="0" value="0">
+        </div>
+        <div class="form-row" style="margin-bottom:10px">
+          <input type="text" id="scorers-input" placeholder="Кто забил: Имя 45', Имя 67'...">
+        </div>
+        <div style="display:flex;gap:10px">
+          <button class="btn btn-green" onclick="updateScore()">📤 Отправить уведомление</button>
+          <button class="btn btn-gray" onclick="hideUpdateScore()">Отмена</button>
+        </div>
+      </div>
+
+      <div class="card">
+        <h3>🏆 Последние матчи</h3>
+        <div id="results-list"></div>
+      </div>
+    </div>
+
+    <!-- TEAMS TAB -->
+    <div class="panel" id="panel-teams">
+      <div class="card">
+        <h3>➕ Добавить команду</h3>
+        <div style="display:flex;gap:10px">
+          <input type="text" id="new-team-name" placeholder="Название команды...">
+          <button class="btn btn-green" onclick="addTeam()" style="white-space:nowrap">Добавить</button>
+        </div>
+      </div>
+      <div class="card">
+        <h3>👤 Добавить игрока</h3>
+        <div class="form-row cols-2">
+          <select id="player-team-select"><option value="">Выбери команду...</option></select>
+          <input type="text" id="new-player-name" placeholder="Имя игрока...">
+        </div>
+        <button class="btn btn-green" onclick="addPlayer()">Добавить игрока</button>
+      </div>
+      <div class="card">
+        <h3>📋 Команды и составы</h3>
+        <div id="teams-list"></div>
+      </div>
+    </div>
+
+    <!-- SCHEDULE TAB -->
+    <div class="panel" id="panel-schedule">
+      <div class="card">
+        <h3>➕ Добавить матч</h3>
+        <div class="form-row cols-3">
+          <input type="text" id="sch-date" placeholder="Дата (15.06)">
+          <input type="text" id="sch-time" placeholder="Время (18:00)">
+          <div></div>
+        </div>
+        <div class="form-row cols-2">
+          <select id="sch-home"><option value="">Хозяева...</option></select>
+          <select id="sch-away"><option value="">Гости...</option></select>
+        </div>
+        <button class="btn btn-green" onclick="addSchedule()">📅 Добавить в расписание</button>
+      </div>
+      <div class="card">
+        <h3>📅 Расписание</h3>
+        <div id="schedule-list"></div>
+      </div>
+    </div>
+
+    <!-- PLAYOFF TAB -->
+    <div class="panel" id="panel-playoff">
+      <div class="card">
+        <h3>➕ Добавить матч плей-офф</h3>
+        <div class="form-row cols-3">
+          <select id="po-stage">
+            <option value="">Стадия...</option>
+            <option value="1/8 финала">1/8 финала (16 команд)</option>
+            <option value="1/4 финала">1/4 финала (8 команд)</option>
+            <option value="1/2 финала">1/2 финала</option>
+            <option value="Финал">Финал</option>
+            <option value="Матч за 3-е место">Матч за 3-е место</option>
+          </select>
+          <select id="po-home"><option value="">Команда 1...</option></select>
+          <select id="po-away"><option value="">Команда 2...</option></select>
+        </div>
+        <div style="display:flex;gap:10px">
+          <button class="btn btn-green" onclick="addPlayoff()">Добавить матч</button>
+          <button class="btn btn-red btn-sm" onclick="clearPlayoff()">🗑️ Очистить всё</button>
+        </div>
+      </div>
+      <div class="card">
+        <h3>🥊 Сетка плей-офф</h3>
+        <div class="bracket" id="bracket-display"></div>
+      </div>
+    </div>
+
+    <!-- RULES TAB -->
+    <div class="panel" id="panel-rules">
+      <div class="card">
+        <h3>📋 Правила турнира</h3>
+        <div style="margin-bottom:12px">
+          <textarea id="rules-text" placeholder="Введи правила турнира..."></textarea>
+        </div>
+        <button class="btn btn-green" onclick="saveRules()">💾 Сохранить правила</button>
+      </div>
+    </div>
+
+    <!-- NOTIFY TAB -->
+    <div class="panel" id="panel-notify">
+      <div class="card">
+        <h3>📣 Отправить объявление всем подписчикам</h3>
+        <div style="margin-bottom:12px">
+          <textarea id="notify-text" placeholder="Текст объявления..."></textarea>
+        </div>
+        <button class="btn btn-green" onclick="sendNotify()">📤 Отправить всем</button>
+      </div>
+      <div class="card" style="background:linear-gradient(135deg,#064e3b22,var(--card))">
+        <h3>💡 Быстрые шаблоны</h3>
+        <div style="display:flex;flex-wrap:wrap;gap:8px">
+          <button class="btn btn-gray btn-sm" onclick="setNotify('⚽ Сегодня матч! Не пропусти!')">📅 Напоминание</button>
+          <button class="btn btn-gray btn-sm" onclick="setNotify('🏆 Турнир начинается! Удачи всем командам!')">🚀 Старт турнира</button>
+          <button class="btn btn-gray btn-sm" onclick="setNotify('📅 Расписание обновлено. Проверь в боте!')">📋 Расписание</button>
+          <button class="btn btn-gray btn-sm" onclick="setNotify('🥊 Плей-офф начинается! Следи за результатами!')">🥊 Плей-офф</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<script>
+let SECRET = '';
+let appData = {};
+let currentLive = null;
+
+// ---- AUTH ----
+function login() {
+  SECRET = document.getElementById('secret-input').value;
+  fetch('/api/data', { headers: { 'X-Admin-Secret': SECRET } })
+    .then(r => {
+      if (r.ok) {
+        document.getElementById('auth-screen').style.display = 'none';
+        document.getElementById('app').style.display = 'block';
+        loadData();
+      } else {
+        document.getElementById('auth-error').style.display = 'block';
+      }
+    }).catch(() => {
+      // Try without auth for data endpoint
+      document.getElementById('auth-screen').style.display = 'none';
+      document.getElementById('app').style.display = 'block';
+      loadData();
+    });
+}
+
+// ---- API ----
+async function api(path, method='GET', body=null) {
+  const opts = { method, headers: { 'Content-Type': 'application/json', 'X-Admin-Secret': SECRET } };
+  if (body) opts.body = JSON.stringify(body);
+  const r = await fetch(path, opts);
+  return r.json();
+}
+
+function toast(msg, type='success') {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = 'show ' + type;
+  setTimeout(() => t.className = '', 2500);
+}
+
+// ---- TABS ----
+function switchTab(name) {
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+  event.target.classList.add('active');
+  document.getElementById('panel-' + name).classList.add('active');
+}
+
+// ---- LOAD DATA ----
+async function loadData() {
+  const data = await fetch('/api/data').then(r => r.json());
+  appData = data;
+  renderAll(data);
+  setTimeout(loadData, 10000); // auto-refresh every 10s
+}
+
+function renderAll(data) {
+  renderStats(data);
+  renderTeams(data);
+  renderSchedule(data);
+  renderLive(data);
+  renderResults(data);
+  renderPlayoff(data);
+  populateSelects(data);
+  if (data.rules) document.getElementById('rules-text').value = data.rules;
+}
+
+function renderStats(data) {
+  const teams = Object.keys(data.teams || {}).length;
+  const matches = (data.matches || []).length;
+  const schedule = (data.schedule || []).length;
+  const subs = (data.subscribers || []).length;
+  document.getElementById('stat-teams').textContent = teams;
+  document.getElementById('stat-matches').textContent = matches;
+  document.getElementById('stat-schedule').textContent = schedule;
+  document.getElementById('stat-subs').textContent = subs;
+  document.getElementById('sub-count').textContent = `Подписчиков: ${subs}`;
+}
+
+function populateSelects(data) {
+  const teams = Object.keys(data.teams || {});
+  const selects = ['live-home-select','live-away-select','player-team-select','sch-home','sch-away','po-home','po-away'];
+  selects.forEach(id => {
+    const el = document.getElementById(id);
+    if (!el) return;
+    const val = el.value;
+    el.innerHTML = '<option value="">Выбери...</option>';
+    teams.forEach(t => { el.innerHTML += `<option value="${t}">${t}</option>`; });
+    el.value = val;
+  });
+}
+
+// ---- LIVE ----
+function renderLive(data) {
+  const live = data.live_match;
+  currentLive = live;
+  const display = document.getElementById('live-display');
+  const startCard = document.getElementById('start-match-card');
+  if (live) {
+    display.style.display = 'block';
+    startCard.style.display = 'none';
+    const [h, a] = live.score.split(':');
+    document.getElementById('live-score-display').textContent = `${h} : ${a}`;
+    document.getElementById('live-home-display').textContent = live.home;
+    document.getElementById('live-away-display').textContent = live.away;
+    document.getElementById('live-scorers-display').textContent = live.scorers ? '⚡ ' + live.scorers : '';
+    // Prefill score inputs
+    document.getElementById('score-home').value = h || 0;
+    document.getElementById('score-away').value = a || 0;
+    document.getElementById('scorers-input').value = live.scorers || '';
+  } else {
+    display.style.display = 'none';
+    startCard.style.display = 'block';
+  }
+}
+
+function renderResults(data) {
+  const el = document.getElementById('results-list');
+  const matches = [...(data.matches || [])].reverse().slice(0, 10);
+  if (!matches.length) { el.innerHTML = '<div style="color:var(--muted);font-size:14px">Нет завершённых матчей</div>'; return; }
+  el.innerHTML = matches.map(m => `
+    <div class="list-item">
+      <div class="list-item-info">
+        <div><b>${m.home}</b> ${m.score} <b>${m.away}</b></div>
+        ${m.scorers ? `<div class="list-item-sub">⚡ ${m.scorers}</div>` : ''}
+      </div>
+    </div>`).join('');
+}
+
+async function startMatch() {
+  const home = document.getElementById('live-home-select').value;
+  const away = document.getElementById('live-away-select').value;
+  if (!home || !away) { toast('Выбери обе команды!', 'error'); return; }
+  if (home === away) { toast('Команды должны быть разные!', 'error'); return; }
+  const r = await api('/api/live', 'POST', { action: 'start', home, away });
+  if (r.ok) { toast('✅ Матч начат! Уведомление отправлено!'); loadData(); }
+  else toast(r.error || 'Ошибка', 'error');
+}
+
+function showUpdateScore() {
+  document.getElementById('update-score-card').style.display = 'block';
+}
+function hideUpdateScore() {
+  document.getElementById('update-score-card').style.display = 'none';
+}
+
+async function updateScore() {
+  if (!currentLive) return;
+  const h = document.getElementById('score-home').value;
+  const a = document.getElementById('score-away').value;
+  const scorers = document.getElementById('scorers-input').value;
+  const r = await api('/api/live', 'POST', {
+    action: 'update',
+    home: currentLive.home,
+    away: currentLive.away,
+    score: `${h}:${a}`,
+    scorers
+  });
+  if (r.ok) { toast('✅ Счёт обновлён! Уведомление отправлено!'); hideUpdateScore(); loadData(); }
+  else toast(r.error || 'Ошибка', 'error');
+}
+
+async function stopLive() {
+  if (!confirm('Завершить матч?')) return;
+  const r = await api('/api/live', 'POST', { action: 'stop' });
+  if (r.ok) { toast('🏁 Матч завершён!'); loadData(); }
+  else toast(r.error || 'Ошибка', 'error');
+}
+
+// ---- TEAMS ----
+function renderTeams(data) {
+  const el = document.getElementById('teams-list');
+  const teams = data.teams || {};
+  if (!Object.keys(teams).length) { el.innerHTML = '<div style="color:var(--muted);font-size:14px">Нет команд</div>'; return; }
+  el.innerHTML = Object.entries(teams).map(([name, info]) => `
+    <div class="list-item" style="flex-direction:column;align-items:flex-start">
+      <div style="display:flex;justify-content:space-between;width:100%;margin-bottom:8px">
+        <span style="font-weight:600">🔵 ${name}</span>
+        <button class="btn btn-red btn-sm" onclick="deleteTeam('${name}')">🗑️</button>
+      </div>
+      <div style="width:100%">
+        ${(info.players || []).map(p => `
+          <div style="display:flex;justify-content:space-between;padding:4px 8px;background:var(--bg);border-radius:6px;margin-bottom:4px;font-size:13px">
+            <span>• ${p}</span>
+            <button class="btn btn-red btn-sm" style="padding:2px 8px" onclick="deletePlayer('${name}','${p}')">✕</button>
+          </div>`).join('') || '<div style="font-size:13px;color:var(--muted);padding:4px 8px">Нет игроков</div>'}
+      </div>
+    </div>`).join('');
+}
+
+async function addTeam() {
+  const name = document.getElementById('new-team-name').value.trim();
+  if (!name) { toast('Введи название!', 'error'); return; }
+  const r = await api('/api/team', 'POST', { name });
+  if (r.ok) { document.getElementById('new-team-name').value = ''; toast('✅ Команда добавлена!'); loadData(); }
+  else toast(r.error || 'Ошибка', 'error');
+}
+
+async function deleteTeam(name) {
+  if (!confirm(`Удалить команду "${name}"?`)) return;
+  const r = await api(`/api/team/${encodeURIComponent(name)}`, 'DELETE');
+  if (r.ok) { toast('🗑️ Команда удалена'); loadData(); }
+}
+
+async function addPlayer() {
+  const team = document.getElementById('player-team-select').value;
+  const player = document.getElementById('new-player-name').value.trim();
+  if (!team || !player) { toast('Выбери команду и введи имя!', 'error'); return; }
+  const r = await api('/api/player', 'POST', { team, player });
+  if (r.ok) { document.getElementById('new-player-name').value = ''; toast('✅ Игрок добавлен!'); loadData(); }
+  else toast(r.error || 'Ошибка', 'error');
+}
+
+async function deletePlayer(team, player) {
+  const r = await api('/api/player', 'DELETE', { team, player });
+  if (r.ok) { toast('🗑️ Игрок удалён'); loadData(); }
+}
+
+// ---- SCHEDULE ----
+function renderSchedule(data) {
+  const el = document.getElementById('schedule-list');
+  const schedule = data.schedule || [];
+  if (!schedule.length) { el.innerHTML = '<div style="color:var(--muted);font-size:14px">Расписание пустое</div>'; return; }
+  el.innerHTML = schedule.map((m, i) => `
+    <div class="list-item">
+      <div class="list-item-info">
+        <div><b>${m.home}</b> vs <b>${m.away}</b></div>
+        <div class="list-item-sub">📅 ${m.date} ${m.time ? '🕐 ' + m.time : ''}</div>
+      </div>
+      <button class="btn btn-red btn-sm" onclick="deleteSchedule(${i})">🗑️</button>
+    </div>`).join('');
+}
+
+async function addSchedule() {
+  const date = document.getElementById('sch-date').value.trim();
+  const time = document.getElementById('sch-time').value.trim();
+  const home = document.getElementById('sch-home').value;
+  const away = document.getElementById('sch-away').value;
+  if (!home || !away) { toast('Выбери команды!', 'error'); return; }
+  if (home === away) { toast('Команды должны быть разные!', 'error'); return; }
+  const r = await api('/api/schedule', 'POST', { date, time, home, away });
+  if (r.ok) { toast('✅ Матч добавлен в расписание!'); loadData(); }
+  else toast(r.error || 'Ошибка', 'error');
+}
+
+async function deleteSchedule(index) {
+  const r = await api(`/api/schedule/${index}`, 'DELETE');
+  if (r.ok) { toast('🗑️ Матч удалён'); loadData(); }
+}
+
+// ---- PLAYOFF ----
+function renderPlayoff(data) {
+  const el = document.getElementById('bracket-display');
+  const playoff = data.playoff || [];
+  if (!playoff.length) { el.innerHTML = '<div style="color:var(--muted);font-size:14px">Плей-офф не начат</div>'; return; }
+  el.innerHTML = playoff.map(stage => `
+    <div class="bracket-round">
+      <h4>${stage.stage}</h4>
+      ${(stage.matches || []).map(m => `
+        <div class="bracket-match">
+          <div class="bracket-team ${m.winner === m.home ? 'winner' : ''}">${m.home} <span style="color:var(--accent)">${m.score !== 'vs' ? m.score.split(':')[0] : ''}</span></div>
+          <div class="bracket-team ${m.winner === m.away ? 'winner' : ''}">${m.away} <span style="color:var(--accent)">${m.score !== 'vs' ? m.score.split(':')[1] : ''}</span></div>
+        </div>`).join('')}
+    </div>`).join('');
+}
+
+async function addPlayoff() {
+  const stage = document.getElementById('po-stage').value;
+  const home = document.getElementById('po-home').value;
+  const away = document.getElementById('po-away').value;
+  if (!stage || !home || !away) { toast('Заполни все поля!', 'error'); return; }
+  if (home === away) { toast('Команды должны быть разные!', 'error'); return; }
+  const r = await api('/api/playoff', 'POST', { stage, home, away });
+  if (r.ok) { toast('✅ Матч плей-офф добавлен!'); loadData(); }
+  else toast(r.error || 'Ошибка', 'error');
+}
+
+async function clearPlayoff() {
+  if (!confirm('Очистить всю сетку плей-офф?')) return;
+  const r = await api('/api/playoff/clear', 'POST');
+  if (r.ok) { toast('🗑️ Плей-офф очищен'); loadData(); }
+}
+
+// ---- RULES ----
+async function saveRules() {
+  const rules = document.getElementById('rules-text').value.trim();
+  const r = await api('/api/rules', 'POST', { rules });
+  if (r.ok) toast('✅ Правила сохранены!');
+  else toast(r.error || 'Ошибка', 'error');
+}
+
+// ---- NOTIFY ----
+function setNotify(text) { document.getElementById('notify-text').value = text; }
+async function sendNotify() {
+  const text = document.getElementById('notify-text').value.trim();
+  if (!text) { toast('Введи текст!', 'error'); return; }
+  const r = await api('/api/notify', 'POST', { text });
+  if (r.ok) { toast('✅ Уведомление отправлено!'); document.getElementById('notify-text').value = ''; }
+  else toast(r.error || 'Ошибка', 'error');
+}
+</script>
+</body>
+</html>
