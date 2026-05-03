@@ -14,17 +14,18 @@ def home():
 def health():
     return {"ok": True}
 
-def run_bot():
-    asyncio.run(bot_main())
+def run_flask():
+    port = int(os.environ.get("PORT", 8080))
+    app.run(host="0.0.0.0", port=port)
 
-async def bot_main():
+async def main():
+    # Flask в отдельном потоке
+    thread = threading.Thread(target=run_flask, daemon=True)
+    thread.start()
+    
+    # Бот в главном потоке
     await bot.delete_webhook(drop_pending_updates=True)
     await dp.start_polling(bot)
 
-# Запускаем бота в отдельном потоке
-thread = threading.Thread(target=run_bot, daemon=True)
-thread.start()
-
 if __name__ == "__main__":
-    port = int(os.environ.get("PORT", 8080))
-    app.run(host="0.0.0.0", port=port)
+    asyncio.run(main())
